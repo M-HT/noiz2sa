@@ -92,7 +92,6 @@ void addEnemyFrag(Vector *p, int mx, int my, int type) {
 
 void addShipFrag(Vector *p) {
   Vector pos, vel;
-  int cmx, cmy;
   int i;
   pos.x = (p->x/SCAN_WIDTH*LAYER_WIDTH)>>8;
   pos.y = (p->y/SCAN_HEIGHT*LAYER_HEIGHT)>>8;
@@ -137,14 +136,14 @@ static int fragColor[3][2][2] = {
 };
 
 void drawFrags() {
-  int x, y, c;
+  int c;
   int i;
   Frag *fr;
   for ( i=0 ; i<FRAG_MAX ; i++ ) {
     if ( frag[i].cnt <= 0 ) continue;
     fr = &(frag[i]);
     c = fr->cnt&1;
-    drawBox(fr->pos.x, fr->pos.y, fr->width, fr->height, 
+    drawBox(fr->pos.x, fr->pos.y, fr->width, fr->height,
 	    fragColor[fr->spc][c][0],fragColor[fr->spc][c][1], l2buf);
   }
 }

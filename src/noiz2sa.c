@@ -263,7 +263,6 @@ int main(int argc, char *argv[]) {
   int done = 0;
   long prvTickCount = 0;
   int i;
-  int btn;
   SDL_Event event;
   long nowTick;
   int frame;

@@ -41,7 +41,7 @@ static int pitch, ppitch;
 
 static SDL_Surface *sprite[SPRITE_NUM];
 static char *spriteFile[SPRITE_NUM] = {
-  "title_n.bmp", "title_o.bmp", "title_i.bmp", "title_z.bmp", "title_2.bmp", 
+  "title_n.bmp", "title_o.bmp", "title_i.bmp", "title_z.bmp", "title_2.bmp",
   "title_s.bmp", "title_a.bmp",
 };
 
@@ -64,7 +64,7 @@ static void loadSprites() {
       exit(1);
     }
     sprite[i] = SDL_ConvertSurface(img,
-				   video->format, 
+				   video->format,
 				   SDL_HWSURFACE | SDL_SRCCOLORKEY);
     SDL_SetColorKey(sprite[i], SDL_SRCCOLORKEY | SDL_RLEACCEL, 0);
   }
@@ -114,7 +114,7 @@ static void makeSmokeBuf() {
       my = y + sctbl[(y*8)&(DIV-1)]/128;
       if ( mx < 0 || mx >= LAYER_WIDTH || my < 0 || my >= LAYER_HEIGHT ) {
 	smokeBuf[x+y*pitch] = &(pbuf[pitch*LAYER_HEIGHT]);
-      } else {	
+      } else {
 	smokeBuf[x+y*pitch] = &(pbuf[mx+my*pitch]);
       }
     }
@@ -312,11 +312,11 @@ void drawLine(int x1, int y1, int x2, int y2, LayerBit color, int width, LayerBi
   }
 }
 
-void drawThickLine(int x1, int y1, int x2, int y2, 
+void drawThickLine(int x1, int y1, int x2, int y2,
 		   LayerBit color1, LayerBit color2, int width) {
   int lx, ly, ax, ay, x, y, ptr, i, j;
   int xMax, yMax;
-  int width1, width2;
+  int width1;
 
   lx = abs(x2 - x1);
   ly = abs(y2 - y1);
@@ -407,10 +407,9 @@ void drawThickLine(int x1, int y1, int x2, int y2,
   }
 }
 
-void drawBox(int x, int y, int width, int height, 
+void drawBox(int x, int y, int width, int height,
 	     LayerBit color1, LayerBit color2, LayerBit *buf) {
-  int i, j;
-  LayerBit cl;
+  int i;
   int ptr;
 
   x -= width>>1; y -= height>>1;
@@ -443,10 +442,9 @@ void drawBox(int x, int y, int width, int height,
   memset(&(buf[ptr]), color2, width);
 }
 
-void drawBoxPanel(int x, int y, int width, int height, 
+void drawBoxPanel(int x, int y, int width, int height,
 		  LayerBit color1, LayerBit color2, LayerBit *buf) {
-  int i, j;
-  LayerBit cl;
+  int i;
   int ptr;
 
   x -= width>>1; y -= height>>1;

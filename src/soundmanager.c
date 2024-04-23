@@ -30,7 +30,7 @@ static Mix_Music *music[MUSIC_NUM];
 #define CHUNK_NUM 7
 
 static char *chunkFileName[CHUNK_NUM] = {
-  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav", 
+  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav",
 };
 static Mix_Chunk *chunk[CHUNK_NUM];
 static int chunkFlag[CHUNK_NUM];
@@ -87,7 +87,6 @@ void initSound() {
   Uint16 audio_format;
   int audio_channels;
   int audio_buffers;
-  int interactive = 0;
 
   if ( SDL_InitSubSystem(SDL_INIT_AUDIO) < 0 ) {
     fprintf(stderr, "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
@@ -98,7 +97,7 @@ void initSound() {
   audio_format = AUDIO_S16;
   audio_channels = 1;
   audio_buffers = 4096;
-  
+
   if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
     return;

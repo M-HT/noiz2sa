@@ -57,7 +57,7 @@ void removeFoe(Foe *fe) {
 }
 
 void initFoes() {
-  int i, j;
+  int i;
   for ( i=0 ; i<FOE_MAX ; i++ ) {
     removeFoeForced(&(foe[i]));
   }
@@ -68,7 +68,7 @@ void initFoes() {
 }
 
 void closeFoes() {
-  int i, j;
+  int i;
   for ( i=0 ; i<FOE_MAX ; i++ ) {
     if ( foe[i].cmd ) delete foe[i].cmd;
   }
@@ -86,9 +86,8 @@ static Foe* getNextFoe() {
   return &(foe[i]);
 }
 
-Foe* addFoe(int x, int y, double rank, int d, int spd, int type, int shield, 
+Foe* addFoe(int x, int y, double rank, int d, int spd, int type, int shield,
 	    BulletMLParser *parser) {
-  int i;
   Foe *fe = getNextFoe();
   if ( !fe ) return NULL;
 
@@ -113,7 +112,7 @@ Foe* addFoe(int x, int y, double rank, int d, int spd, int type, int shield,
   return fe;
 }
 
-Foe* addFoeBossActiveBullet(int x, int y, double rank, 
+Foe* addFoeBossActiveBullet(int x, int y, double rank,
 			    int d, int spd, BulletMLParser *parser) {
   Foe *fe = addFoe(x, y, rank, d, spd, BOSS_TYPE, 0, parser);
   if ( !fe ) return NULL;
@@ -122,7 +121,7 @@ Foe* addFoeBossActiveBullet(int x, int y, double rank,
   return fe;
 }
 
-void addFoeActiveBullet(Vector *pos, double rank, 
+void addFoeActiveBullet(Vector *pos, double rank,
 			int d, int spd, int color, BulletMLState *state) {
   Foe *fe = getNextFoe();
   if ( !fe ) return;
@@ -169,8 +168,8 @@ static void wipeBullets(Vector *pos, int width) {
 
 static int foeSize[] = {30, 40, 56, 96};
 static int foeScanSize[] = {
-  foeSize[0]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, foeSize[1]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, 
-  foeSize[2]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, foeSize[3]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, 
+  foeSize[0]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, foeSize[1]*256*SCAN_WIDTH/LAYER_WIDTH/4*3,
+  foeSize[2]*256*SCAN_WIDTH/LAYER_WIDTH/4*3, foeSize[3]*256*SCAN_WIDTH/LAYER_WIDTH/4*3,
 };
 #define SHOT_SCAN_HEIGHT (SHOT_HEIGHT*256*SCAN_HEIGHT/LAYER_HEIGHT/2)
 static int enemyScore[] = {500, 1000, 5000, 50000};
@@ -278,7 +277,7 @@ void moveFoes() {
   // A game speed becomes slow as many bullets appears.
   interval = INTERVAL_BASE;
   if ( !insane && !nowait && foeNum > processSpeedDownBulletsNum ) {
-    interval += (foeNum-processSpeedDownBulletsNum) * INTERVAL_BASE / 
+    interval += (foeNum-processSpeedDownBulletsNum) * INTERVAL_BASE /
       processSpeedDownBulletsNum;
     if ( interval > INTERVAL_BASE*2 ) interval = INTERVAL_BASE*2;
   }
@@ -299,7 +298,7 @@ void clearFoesZako() {
   int i;
   Foe *fe;
   for ( i=0 ; i<FOE_MAX ; i++ ) {
-    if ( foe[i].spc == NOT_EXIST || 
+    if ( foe[i].spc == NOT_EXIST ||
 	 foe[i].type == BOSS_TYPE || foe[i].spc == BOSS_ACTIVE_BULLET ) continue;
     fe = &(foe[i]);
     addClearFrag(&(fe->pos), &(fe->mv));
@@ -332,7 +331,7 @@ static int foeColor[][2] = {
 void drawFoes() {
   int i, j;
   Foe *fe;
-  int x, y, px, py;
+  int x, y;
   int sz, cl1, cl2;
   int d, md, di;
   for ( i=0 ; i<FOE_MAX ; i++ ) {
@@ -362,11 +361,11 @@ void drawFoes() {
 #define BULLET_COLOR_NUM 3
 
 static int bulletColor[BULLET_COLOR_NUM][2] = {
-  {16*14-1, 16*2-1}, {16*16-1, 16*4-1}, {16*12-1, 16*6-1}, 
+  {16*14-1, 16*2-1}, {16*16-1, 16*4-1}, {16*12-1, 16*6-1},
 };
 
 #define BULLET_WIDTH 6
- 
+
 void drawBullets() {
   int i;
   Foe *fe;

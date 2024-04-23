@@ -10,8 +10,8 @@
  * @version $Revision: 1.4 $
  */
 #define randN(N) (rand()%(N))
-#define randNS(N) (rand()%(N<<1)-N)
-#define randNS2(N) ((rand()%(N)-(N>>1)) + (rand()%(N)-(N>>1)))
+#define randNS(N) (rand()%((N)<<1)-(N))
+#define randNS2(N) ((rand()%(N)-((N)>>1)) + (rand()%(N)-((N)>>1)))
 #define absN(a) ((a) < 0 ? - (a) : (a))
 
 #define INTERVAL_BASE 16

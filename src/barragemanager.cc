@@ -157,7 +157,7 @@ static int quickAppType;
  * Make the barrage pattern of this scene.
  */
 void setBarrages(float level, int bm, int midMode) {
-  int bpn = 0, bn, i;
+  int bpn = 0, bn;
   int barrageMax, addFrqLoop = 0;
 
   barrageNum = 0;
@@ -215,7 +215,7 @@ void setBarrages(float level, int bm, int midMode) {
 
   pax = (nextRandInt(&rnd)%(SCAN_WIDTH_8*2/3) + (SCAN_WIDTH_8/6));
   pay = (nextRandInt(&rnd)%(SCAN_HEIGHT_8/6) + (SCAN_HEIGHT_8/10));
-  
+
   scene++;
 }
 
@@ -310,11 +310,11 @@ void addBossBullet() {
   for ( int i=0 ; i<barrageNum ; i++ ) {
     if ( barrage[i]->type != 2 ) continue;
     if ( bossBullet == NULL ) {
-      bl = addFoe(SCAN_WIDTH_8/2, SCAN_HEIGHT_8/5, barrage[i]->rank, 512, 0, 
+      bl = addFoe(SCAN_WIDTH_8/2, SCAN_HEIGHT_8/5, barrage[i]->rank, 512, 0,
 		  BOSS_TYPE, BOSS_SHIELD, barrage[i]->bulletml);
       bossBullet = bl;
     } else {
-      bl = addFoeBossActiveBullet(SCAN_WIDTH_8/2, SCAN_HEIGHT_8/5, barrage[i]->rank, 512, 0, 
+      bl = addFoeBossActiveBullet(SCAN_WIDTH_8/2, SCAN_HEIGHT_8/5, barrage[i]->rank, 512, 0,
 				  barrage[i]->bulletml);
     }
   }
