@@ -40,13 +40,14 @@ extern int windowMode;
 extern LayerBit *l1buf, *l2buf;
 extern LayerBit *buf;
 extern LayerBit *lpbuf, *rpbuf;
-extern Uint8 *keys;
+extern const Uint8 *keys;
 extern SDL_Joystick *stick;
 extern int buttonReversed;
 extern int brightness;
 
-void initSDL(int window);
+void initSDL();
 void closeSDL();
+void resized(int, int);
 void blendScreen();
 void flipScreen();
 void clearScreen();
@@ -55,9 +56,9 @@ void clearRPanel();
 void smokeScreen();
 void drawThickLine(int x1, int y1, int x2, int y2, LayerBit color1, LayerBit color2, int width);
 void drawLine(int x1, int y1, int x2, int y2, LayerBit color, int width, LayerBit *buf);
-void drawBox(int x, int y, int width, int height, 
+void drawBox(int x, int y, int width, int height,
 	     LayerBit color1, LayerBit color2, LayerBit *buf);
-void drawBoxPanel(int x, int y, int width, int height, 
+void drawBoxPanel(int x, int y, int width, int height,
 		  LayerBit color1, LayerBit color2, LayerBit *buf);
 int drawNum(int n, int x ,int y, int s, int c1, int c2);
 int drawNumRight(int n, int x ,int y, int s, int c1, int c2);
