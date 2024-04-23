@@ -47,7 +47,6 @@ extern int brightness;
 
 void initSDL();
 void closeSDL();
-void resized(int, int);
 void blendScreen();
 void flipScreen();
 void clearScreen();

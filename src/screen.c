@@ -27,9 +27,12 @@ int windowMode = 0;
 int brightness = DEFAULT_BRIGHTNESS;
 
 static SDL_Window *window;
-static SDL_Surface *window_surface, *video32;
+static SDL_Renderer *renderer;
+static SDL_Texture *texture;
 static SDL_Palette* palette;
-static SDL_Rect flip_rect;
+#if SDL_VERSION_ATLEAST(2,0,12)
+static int blitToTexture;
+#endif
 static SDL_Surface *video, *layer, *lpanel, *rpanel;
 static LayerBit **smokeBuf;
 static LayerBit *pbuf;
@@ -127,32 +130,11 @@ static void makeSmokeBuf() {
   }
 }
 
-static void calc_flip_rect(void) {
-  if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
-    if (((float)window_surface->w) / video->w <= ((float)window_surface->h) / video->h) {
-      flip_rect.x = 0;
-      flip_rect.w = window_surface->w;
-      flip_rect.h = (window_surface->w * video->h) / video->w;
-      flip_rect.y = (window_surface->h - flip_rect.h) / 2;
-    } else {
-      flip_rect.y = 0;
-      flip_rect.h = window_surface->h;
-      flip_rect.w = (window_surface->h * video->w) / video->h;
-      flip_rect.x = (window_surface->w - flip_rect.w) / 2;
-    }
-  } else {
-    flip_rect.x = 0;
-    flip_rect.y = 0;
-    flip_rect.w = window_surface->w;
-    flip_rect.h = window_surface->h;
-  }
-}
-
 void initSDL() {
   Uint8 videoBpp;
   SDL_PixelFormat *pfrm;
 
-  if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0 ) {
+  if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
     fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
     exit(1);
   }
@@ -160,19 +142,20 @@ void initSDL() {
 
   videoBpp = BPP;
 
-  if ( (window = SDL_CreateWindow(CAPTION, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_HIDDEN | (windowMode ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP))) == NULL ) {
+  if ( (window = SDL_CreateWindow(CAPTION, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_HIDDEN | (windowMode ? SDL_WINDOW_RESIZABLE : SDL_WINDOW_FULLSCREEN_DESKTOP))) == NULL ) {
     fprintf(stderr, "Unable to create SDL window: %s\n", SDL_GetError());
     exit(1);
   }
-  if ( (window_surface = SDL_GetWindowSurface(window)) == NULL ) {
-    fprintf(stderr, "Unable to create SDL window surface: %s\n", SDL_GetError());
+  if ( (renderer = SDL_CreateRenderer(window, -1, windowMode ? 0 : SDL_RENDERER_PRESENTVSYNC)) == NULL ) {
+    fprintf(stderr, "Unable to create SDL renderer: %s\n", SDL_GetError());
     exit(1);
   }
+  SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
   if ( (video = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, videoBpp, 0, 0, 0, 0)) == NULL ) {
     fprintf(stderr, "Unable to create SDL screen surface: %s\n", SDL_GetError());
     exit(1);
   }
-  if ( (video32 = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0, 0, 0, 0)) == NULL ) {
+  if ( (texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT)) == NULL ) {
     fprintf(stderr, "Unable to create SDL screen32 surface: %s\n", SDL_GetError());
     exit(1);
   }
@@ -180,6 +163,14 @@ void initSDL() {
     fprintf(stderr, "Unable to create SDL palette: %s\n", SDL_GetError());
     exit(1);
   }
+#if SDL_VERSION_ATLEAST(2,0,12)
+  blitToTexture = 0;
+  SDL_version linked;
+  SDL_GetVersion(&linked);
+  if ( SDL_VERSIONNUM(linked.major,linked.minor,linked.patch) >= SDL_VERSIONNUM(2,0,12) ) {
+    blitToTexture = 1;
+  }
+#endif
   screenRect.x = screenRect.y = 0;
   screenRect.w = SCREEN_WIDTH; screenRect.h = SCREEN_HEIGHT;
   pfrm = video->format;
@@ -196,7 +187,6 @@ void initSDL() {
       exit(1);
   }
   SDL_ShowWindow(window);
-  calc_flip_rect();
   layerRect.x = (SCREEN_WIDTH-LAYER_WIDTH)/2;
   layerRect.y = (SCREEN_HEIGHT-LAYER_HEIGHT)/2;
   layerRect.w = LAYER_WIDTH;
@@ -227,19 +217,26 @@ void initSDL() {
 
   loadSprites();
 
-  stick = SDL_JoystickOpen(0);
+  if ( SDL_InitSubSystem(SDL_INIT_JOYSTICK) >= 0 ) {
+    stick = SDL_JoystickOpen(0);
+  }
 
   SDL_ShowCursor(SDL_DISABLE);
-  //SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 
 void closeSDL() {
   SDL_ShowCursor(SDL_ENABLE);
-}
-
-void resized(int width, int height) {
-  window_surface = SDL_GetWindowSurface(window);
-  calc_flip_rect();
+  if ( stick != NULL ) {
+    SDL_JoystickClose(stick);
+  }
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_FreeSurface(rpanel);
+  SDL_FreeSurface(lpanel);
+  SDL_FreeSurface(layer);
+  SDL_FreeSurface(video);
+  SDL_FreePalette(palette);
 }
 
 void blendScreen() {
@@ -250,15 +247,44 @@ void blendScreen() {
 }
 
 void flipScreen() {
+#if SDL_VERSION_ATLEAST(2,0,12)
+  SDL_Surface *texture_surface;
+#endif
+  Uint32 *texture_pixels;
+  Uint8 *screen_pixels;
+  int texture_pitch, h, x;
+
   SDL_BlitSurface(layer, NULL, video, &layerRect);
   SDL_BlitSurface(lpanel, NULL, video, &lpanelRect);
   SDL_BlitSurface(rpanel, NULL, video, &rpanelRect);
   if ( status == TITLE ) {
     drawTitle();
   }
-  SDL_BlitSurface(video, NULL, video32, NULL);
-  SDL_BlitScaled(video32, NULL, window_surface, &flip_rect);
-  SDL_UpdateWindowSurface(window);
+#if SDL_VERSION_ATLEAST(2,0,12)
+  if ( blitToTexture ) {
+    SDL_LockTextureToSurface(texture, NULL, &texture_surface);
+    SDL_BlitSurface(video, NULL, texture_surface, NULL);
+    SDL_UnlockTexture(texture);
+  } else
+#endif
+  {
+    SDL_LockSurface(video);
+    SDL_LockTexture(texture, NULL, (void **) &texture_pixels, &texture_pitch);
+
+    screen_pixels = (Uint8 *)video->pixels;
+    for (h = video->h; h != 0; h--) {
+      for (x = 0; x < video->w; x++) {
+        texture_pixels[x] = *(Uint32 *)&(color[screen_pixels[x]]);
+      }
+      screen_pixels += video->pitch;
+      texture_pixels = (Uint32 *) (texture_pitch + (Uint8 *)texture_pixels);
+    }
+
+    SDL_UnlockTexture(texture);
+    SDL_UnlockSurface(video);
+  }
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
 }
 
 void clearScreen() {
@@ -592,6 +618,22 @@ int buttonReversed = 0;
 
 int getButtonState() {
   int btn = 0;
+#if defined(PYRA)
+  if ( keys[SDL_SCANCODE_HOME] == SDL_PRESSED || keys[SDL_SCANCODE_PAGEUP] == SDL_PRESSED ) {
+    if ( !buttonReversed ) {
+      btn |= PAD_BUTTON1;
+    } else {
+      btn |= PAD_BUTTON2;
+    }
+  }
+  if ( keys[SDL_SCANCODE_PAGEDOWN] == SDL_PRESSED || keys[SDL_SCANCODE_END] == SDL_PRESSED ) {
+    if ( !buttonReversed ) {
+      btn |= PAD_BUTTON2;
+    } else {
+      btn |= PAD_BUTTON1;
+    }
+  }
+#else
   int btn1 = 0, btn2 = 0, btn3 = 0, btn4 = 0;
   if ( stick != NULL ) {
     btn1 = SDL_JoystickGetButton(stick, 0);
@@ -613,5 +655,6 @@ int getButtonState() {
       btn |= PAD_BUTTON1;
     }
   }
+#endif
   return btn;
 }

@@ -281,11 +281,6 @@ int main(int argc, char *argv[]) {
         case SDL_QUIT:
           done = 1;
           break;
-        case SDL_WINDOWEVENT:
-          if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ) {
-            resized(event.window.data1, event.window.data2);
-          }
-          break;
         default:
           break;
       }
